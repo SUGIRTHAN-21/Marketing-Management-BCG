@@ -38,7 +38,6 @@ def index():
     return render_template("index.html")
 
 
-
 @app.route("/api/data")
 def api_data():
     return jsonify(
@@ -54,8 +53,8 @@ def api_data():
     )
 
 
-@app.route("/api/gemini-insight", methods=["POST"])
-def gemini_insight():
+@app.route("/api/strategy-insight", methods=["POST"])
+def strategy_insight():
     if not groq_client:
         return jsonify({"error": "GROQ_API not configured on server"}), 500
 
@@ -69,20 +68,58 @@ BCG matrix position and give a crisp, executive-style strategic insight in under
 Product: {product_name}
 SBU: {metrics.get('sbu')}
 Market Share: {metrics.get('market_share')}%
+Largest Competitor Market Share: {metrics.get('largest_competitor_market_share')}%
 Relative Market Share: {metrics.get('relative_market_share')}x
 Industry Growth Rate: {metrics.get('industry_growth_rate')}%
-Product Growth Rate: {metrics.get('growth_rate')}%
-Revenue: {metrics.get('revenue')}
-Sales Volume: {metrics.get('sales_volume')}
 Current Quadrant: {metrics.get('quadrant')}
 
-Give a direct, actionable strategic insight — no preamble, no headers."""
+Cover: why it belongs in this quadrant, one strength, one risk, and one clear recommendation
+(Invest, Maintain, Harvest, or Divest). No preamble, no headers, no financial KPIs."""
 
     try:
         response = groq_client.chat.completions.create(
             model=GROQ_MODEL,
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=200,
+            max_tokens=220,
+            temperature=0.7,
+        )
+        return jsonify({"insight": response.choices[0].message.content.strip()})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/performance-insight", methods=["POST"])
+def performance_insight():
+    if not groq_client:
+        return jsonify({"error": "GROQ_API not configured on server"}), 500
+
+    payload = request.get_json(force=True) or {}
+    product_name = payload.get("product", "Unknown Product")
+    metrics = payload.get("data", {})
+
+    prompt = f"""You are a senior business performance analyst. Analyze this product's
+operational and financial performance and give a crisp, executive-style summary in under 120 words.
+
+Product: {product_name}
+SBU: {metrics.get('sbu')}
+Sales Volume: {metrics.get('sales_volume')} units
+Average Selling Price: {metrics.get('average_selling_price')}
+Revenue: {metrics.get('revenue')}
+Profit: {metrics.get('profit')}
+Profit Margin: {metrics.get('profit_margin')}%
+Investment Level: {metrics.get('investment_level')}%
+Marketing Spend: {metrics.get('marketing_spend')}%
+Product Growth Rate: {metrics.get('growth_rate')}%
+Performance Score: {metrics.get('performance_score')}
+
+Cover: sales performance, revenue performance, investment effectiveness, and 2-3 concrete
+business improvement suggestions. No preamble, no headers, no BCG quadrant talk."""
+
+    try:
+        response = groq_client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=220,
             temperature=0.7,
         )
         return jsonify({"insight": response.choices[0].message.content.strip()})
@@ -105,11 +142,11 @@ def chat():
     portfolio_snapshot = json.dumps(PRODUCTS_DATA, indent=2)
     sbu_snapshot = json.dumps(SBU_MAPPING, indent=2)
 
-    system_context = f"""You are an elite BCG strategy consultant embedded inside the Bajaj Auto AI Strategic Portfolio Analyzer dashboard.
+    system_context = f"""You are an elite strategy and business performance consultant embedded inside the Bajaj Auto AI Strategic Portfolio Analyzer dashboard.
 You have LIVE access to the full portfolio dataset below. Use it to give sharp, data-driven answers.
 
 Rules:
-- Answer ONLY questions related to Bajaj Auto products, BCG strategy, investment planning, market share, revenue, growth, or portfolio decisions.
+- Answer ONLY questions related to Bajaj Auto products, BCG strategy, investment planning, market share, revenue, growth, profit, or portfolio decisions.
 - For off-topic questions, politely decline and redirect to portfolio strategy.
 - Keep replies concise (under 150 words) and executive-style unless the user asks for detail.
 - Use numbers from the data when relevant. Format currency as ₹X Billion.

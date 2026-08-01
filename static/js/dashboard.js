@@ -6,35 +6,23 @@ const BCG_IGR_MAX = 50.0;
 const MARKER_SIZE = 54;
 
 const QUADRANT_COLORS = {
-  'Star': { bg: '#eff6ff', border: '#bfdbfe', text: '#1d4ed8' },
-  'Cash Cow': { bg: '#f0fdf4', border: '#bbf7d0', text: '#15803d' },
-  'Question Mark': { bg: '#fffbeb', border: '#fde68a', text: '#b45309' },
-  'Dog': { bg: '#fff1f2', border: '#fecdd3', text: '#9f1239' },
+  'Star': { bg: '#dbeaff', border: '#93c5fd', text: '#1d4ed8' },
+  'Cash Cow': { bg: '#d3f9e3', border: '#6ee7b7', text: '#047857' },
+  'Question Mark': { bg: '#fef1c7', border: '#fcd34d', text: '#b45309' },
+  'Dog': { bg: '#fdd9e2', border: '#fda4af', text: '#be123c' },
 };
 
 const PRODUCT_MARKER_COLORS = {
-  'Pulsar': '#1d4ed8',
-  'Platina': '#0f766e',
-  'Dominar': '#7c2d12',
-  'Avenger': '#581c87',
-  'Chetak EV': '#15803d',
-  'RE E-Tec': '#b45309',
-  'Maxima': '#374151',
-  'GoGo': '#065f46',
-  'Low-End ICE': '#9f1239',
+  'Pulsar': '#2563eb',
+  'Platina': '#0d9488',
+  'Dominar': '#c2410c',
+  'Avenger': '#7e22ce',
+  'Chetak EV': '#16a34a',
+  'RE E-Tec': '#d97706',
+  'Maxima': '#334155',
+  'GoGo': '#059669',
+  'Low-End ICE': '#e11d48',
 };
-
-const PRODUCT_COLORS = [
-  'rgba(29, 78, 216, 0.75)',
-  'rgba(15, 118, 110, 0.75)',
-  'rgba(124, 45, 18, 0.75)',
-  'rgba(88, 28, 135, 0.75)',
-  'rgba(21, 128, 61, 0.75)',
-  'rgba(180, 83, 9, 0.75)',
-  'rgba(55, 65, 81, 0.75)',
-  'rgba(6, 95, 70, 0.75)',
-  'rgba(159, 18, 57, 0.75)',
-];
 
 const SBU_BADGE_IDS = {
   '2-Wheelers': 'sbu-badge-2w',
@@ -50,10 +38,12 @@ let state = {
   sbuMapping: {},
   selectedProduct: '',
   activeSBU: '2-Wheelers',
+  activeModule: 'strategic',
   previousQuadrant: {},
 };
 
 let charts = {};
+let chartsInit = { strategic: false, performance: false };
 
 document.addEventListener('DOMContentLoaded', () => {
   fetch('/api/data')
@@ -62,26 +52,53 @@ document.addEventListener('DOMContentLoaded', () => {
       state.products = JSON.parse(JSON.stringify(data.products));
       state.sbuMapping = data.sbus;
 
+      Object.values(state.products).forEach(p => recomputeProduct(p));
+
       Object.keys(state.products).forEach(name => {
-        const p = state.products[name];
-        p.quadrant = getQuadrant(p.relative_market_share, p.industry_growth_rate);
-        state.previousQuadrant[name] = p.quadrant;
+        state.previousQuadrant[name] = state.products[name].quadrant;
       });
 
       state.selectedProduct = 'Pulsar';
       state.activeSBU = '2-Wheelers';
+      state.activeModule = 'strategic';
 
       attachProductButtons();
       attachSBULabels();
+      attachModuleTabs();
       attachSliders();
 
       applyMarkerColors();
 
-      initCharts();
+      initStrategicCharts();
+      chartsInit.strategic = true;
+
       refreshAll();
     })
     .catch(err => console.error('Data load failed:', err));
 });
+
+function recomputeProduct(p) {
+  const competitor = p.largest_competitor_market_share > 0 ? p.largest_competitor_market_share : 0.1;
+  p.relative_market_share = Math.round((p.market_share / competitor) * 100) / 100;
+  p.quadrant = getQuadrant(p.relative_market_share, p.industry_growth_rate);
+  p.revenue = Math.round(p.sales_volume * p.average_selling_price);
+  p.profit = Math.round(p.revenue * (p.profit_margin / 100));
+  p.performance_score = computePerformanceScore(p);
+}
+
+function computePerformanceScore(p) {
+  const raw = (p.profit_margin * 1.8) + ((p.growth_rate - p.industry_growth_rate) * 1.2) + (p.investment_level * 0.25) + 20;
+  return Math.round(Math.max(0, Math.min(100, raw)));
+}
+
+function getQuadrant(rms, igr) {
+  const hi_rms = rms >= BCG_RMS_THRESHOLD;
+  const hi_igr = igr >= BCG_IGR_THRESHOLD;
+  if (hi_rms && hi_igr) return 'Star';
+  if (hi_rms && !hi_igr) return 'Cash Cow';
+  if (!hi_rms && hi_igr) return 'Question Mark';
+  return 'Dog';
+}
 
 function attachProductButtons() {
   document.querySelectorAll('.product-btn').forEach(btn => {
@@ -101,43 +118,78 @@ function attachSBULabels() {
       const firstProduct = state.sbuMapping[sbuName][0];
       if (firstProduct) {
         state.selectedProduct = firstProduct;
-        loadSliders(firstProduct);
-        updateInfoPanel();
+        loadControls(firstProduct);
+        updateInfoPanels();
         generateAndRenderRecommendation(state.previousQuadrant[firstProduct] || '');
-        setText('control-product-name', firstProduct);
+        renderPerformanceAnalysis();
       }
 
       syncProductButtonHighlight();
-
       activateSBU(sbuName);
     });
   });
+}
+
+function attachModuleTabs() {
+  document.querySelectorAll('.module-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const module = btn.dataset.module;
+      if (!module || module === state.activeModule) return;
+      switchModule(module);
+    });
+  });
+}
+
+function switchModule(module) {
+  state.activeModule = module;
+
+  document.querySelectorAll('.module-tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.module === module);
+  });
+
+  document.getElementById('control-panel-strategic').style.display = module === 'strategic' ? '' : 'none';
+  document.getElementById('control-panel-performance').style.display = module === 'performance' ? '' : 'none';
+  document.getElementById('panel-strategic').style.display = module === 'strategic' ? '' : 'none';
+  document.getElementById('panel-performance').style.display = module === 'performance' ? '' : 'none';
+
+  if (module === 'performance' && !chartsInit.performance) {
+    initPerformanceCharts();
+    chartsInit.performance = true;
+  }
+
+  if (module === 'strategic') {
+    updateBCGMatrix();
+  }
 }
 
 function attachSliders() {
   document.querySelectorAll('input[data-field]').forEach(slider => {
     slider.addEventListener('input', () => {
       const field = slider.dataset.field;
+      const prefix = slider.id.startsWith('sl-s-') ? 's' : 'p';
       const raw = parseFloat(slider.value);
 
-      updateSliderDisplay(field, raw);
+      updateSliderDisplay(prefix, field, raw);
 
       const p = state.products[state.selectedProduct];
       if (!p) return;
 
       const prevQ = p.quadrant;
       p[field] = raw;
-      p.quadrant = getQuadrant(p.relative_market_share, p.industry_growth_rate);
+      recomputeProduct(p);
 
       const storedPrev = state.previousQuadrant[state.selectedProduct];
 
+      syncMirrorSlider(field, raw);
+      updateComputedDisplays();
+      updateInfoPanels();
       updateBCGMatrix();
-      updateInfoPanel();
       updateNavQuadrantDots();
       updateAllCharts();
       updateSBUBadges();
       updateExecStrip();
       generateAndRenderRecommendation(storedPrev);
+      renderPerformanceAnalysis();
 
       if (prevQ !== p.quadrant) {
         state.previousQuadrant[state.selectedProduct] = prevQ;
@@ -146,15 +198,23 @@ function attachSliders() {
   });
 }
 
+function syncMirrorSlider(field, value) {
+  document.querySelectorAll(`input[data-field="${field}"]`).forEach(el => {
+    if (parseFloat(el.value) !== value) el.value = value;
+    const prefix = el.id.startsWith('sl-s-') ? 's' : 'p';
+    updateSliderDisplay(prefix, field, value);
+  });
+}
+
 function selectProduct(name) {
   const p = state.products[name];
   if (!p) return;
 
   state.selectedProduct = name;
-  loadSliders(name);
-  updateInfoPanel();
+  loadControls(name);
+  updateInfoPanels();
   generateAndRenderRecommendation(state.previousQuadrant[name] || '');
-  setText('control-product-name', name);
+  renderPerformanceAnalysis();
   syncProductButtonHighlight();
 
   if (p.sbu !== state.activeSBU) {
@@ -177,7 +237,6 @@ function activateSBU(sbuName) {
   });
 
   updateBCGMatrix();
-
   syncSelectedMarker();
 
   updateAllCharts();
@@ -212,6 +271,7 @@ function updateBCGMatrix() {
 
   const W = matrix.offsetWidth || 1;
   const H = matrix.offsetHeight || 1;
+  if (!W || !H) return;
 
   document.querySelectorAll('.product-marker').forEach(el => {
     const productName = el.dataset.product;
@@ -220,10 +280,7 @@ function updateBCGMatrix() {
 
     if (el.dataset.sbu !== state.activeSBU) return;
 
-    const { xPct, yPct } = getBCGPosition(
-      p.relative_market_share,
-      p.industry_growth_rate,
-    );
+    const { xPct, yPct } = getBCGPosition(p.relative_market_share, p.industry_growth_rate);
 
     const mW = el.offsetWidth || MARKER_SIZE;
     const mH = el.offsetHeight || MARKER_SIZE;
@@ -254,37 +311,46 @@ function syncSelectedMarker() {
   });
 }
 
-function loadSliders(productName) {
+function loadControls(productName) {
   const p = state.products[productName];
   if (!p) return;
 
-  ['market_share', 'relative_market_share', 'industry_growth_rate',
-    'growth_rate', 'sales_volume', 'revenue', 'investment_level'].forEach(field => {
-      const slider = document.getElementById(`sl-${field}`);
-      if (slider) {
-        slider.value = p[field];
-        updateSliderDisplay(field, p[field]);
-      }
-    });
+  setText('control-product-name-s', productName);
+  setText('control-product-name-p', productName);
+
+  ['market_share', 'largest_competitor_market_share', 'industry_growth_rate'].forEach(field => {
+    const slider = document.getElementById(`sl-s-${field}`);
+    if (slider) {
+      slider.value = p[field];
+      updateSliderDisplay('s', field, p[field]);
+    }
+  });
+
+  ['sales_volume', 'average_selling_price', 'investment_level', 'growth_rate', 'marketing_spend', 'profit_margin'].forEach(field => {
+    const slider = document.getElementById(`sl-p-${field}`);
+    if (slider) {
+      slider.value = p[field];
+      updateSliderDisplay('p', field, p[field]);
+    }
+  });
+
+  updateComputedDisplays();
 }
 
-function updateSliderDisplay(field, value) {
-  const el = document.getElementById(`val-${field}`);
+function updateComputedDisplays() {
+  const p = state.products[state.selectedProduct];
+  if (!p) return;
+
+  setValueWithUnit('val-s-relative_market_share', p.relative_market_share.toFixed(2));
+  setText('val-s-quadrant', p.quadrant);
+  setText('val-p-revenue', formatRevenue(p.revenue));
+  setText('val-p-profit', formatRevenue(p.profit));
+}
+
+function setValueWithUnit(id, text) {
+  const el = document.getElementById(id);
   if (!el) return;
   const unit = el.querySelector('.slider-unit');
-
-  let text = '';
-  switch (field) {
-    case 'market_share':
-    case 'industry_growth_rate':
-    case 'growth_rate':
-    case 'investment_level': text = value.toFixed(1); break;
-    case 'relative_market_share': text = value.toFixed(2); break;
-    case 'sales_volume': text = formatNumber(value); break;
-    case 'revenue': text = formatRevenue(value); break;
-    default: text = String(value);
-  }
-
   if (unit) {
     el.childNodes[0].textContent = text;
   } else {
@@ -292,37 +358,73 @@ function updateSliderDisplay(field, value) {
   }
 }
 
-function getQuadrant(rms, igr) {
-  const hi_rms = rms >= BCG_RMS_THRESHOLD;
-  const hi_igr = igr >= BCG_IGR_THRESHOLD;
-  if (hi_rms && hi_igr) return 'Star';
-  if (hi_rms && !hi_igr) return 'Cash Cow';
-  if (!hi_rms && hi_igr) return 'Question Mark';
-  return 'Dog';
+function updateSliderDisplay(prefix, field, value) {
+  const el = document.getElementById(`val-${prefix}-${field}`);
+  if (!el) return;
+
+  let text = '';
+  switch (field) {
+    case 'market_share':
+    case 'largest_competitor_market_share':
+    case 'industry_growth_rate':
+    case 'growth_rate':
+    case 'marketing_spend':
+    case 'profit_margin':
+      text = value.toFixed(1);
+      break;
+    case 'investment_level':
+      text = value.toFixed(0);
+      break;
+    case 'sales_volume':
+      text = formatNumber(value);
+      break;
+    case 'average_selling_price':
+      text = '₹' + formatNumber(value);
+      break;
+    default:
+      text = String(value);
+  }
+
+  setValueWithUnit(el.id, text);
 }
 
-function updateInfoPanel() {
+function updateInfoPanels() {
   const name = state.selectedProduct;
   const p = state.products[name];
   if (!p) return;
   const q = p.quadrant;
 
-  setText('info-product-name', name);
-  setText('info-sbu-name', p.sbu);
-  setText('info-sales_volume', formatNumber(p.sales_volume) + ' units');
-  setText('info-revenue', '₹' + formatRevenueLong(p.revenue));
-  setText('info-market_share', p.market_share.toFixed(1) + '%');
-  setText('info-relative_market_share', p.relative_market_share.toFixed(2) + '×');
-  setText('info-industry_growth_rate', p.industry_growth_rate.toFixed(1) + '%');
-  setText('info-growth_rate', p.growth_rate.toFixed(1) + '%');
-  setText('info-investment_level', p.investment_level + '%');
-  setText('info-current-quadrant', q);
+  setText('info-s-product-name', name);
+  setText('info-s-sbu-name', p.sbu);
+  setText('info-s-market_share', p.market_share.toFixed(1) + '%');
+  setText('info-s-relative_market_share', p.relative_market_share.toFixed(2) + '×');
+  setText('info-s-industry_growth_rate', p.industry_growth_rate.toFixed(1) + '%');
+  setText('info-s-current-quadrant', q);
 
-  const badge = document.getElementById('info-quadrant-badge');
-  if (badge) {
-    badge.textContent = q;
-    badge.className = 'quadrant-badge ' + quadrantBadgeClass(q);
+  const sBadge = document.getElementById('info-s-quadrant-badge');
+  if (sBadge) {
+    sBadge.textContent = q;
+    sBadge.className = 'quadrant-badge ' + quadrantBadgeClass(q);
   }
+
+  setText('info-p-product-name', name);
+  setText('info-p-sbu-name', p.sbu);
+  setText('info-p-sales_volume', formatNumber(p.sales_volume) + ' units');
+  setText('info-p-revenue', '₹' + formatRevenueLong(p.revenue));
+  setText('info-p-profit', '₹' + formatRevenueLong(p.profit));
+  setText('info-p-average_selling_price', '₹' + formatNumber(p.average_selling_price));
+  setText('info-p-investment_level', p.investment_level + '%');
+  setText('info-p-performance_score', p.performance_score);
+  setText('info-p-growth_rate', p.growth_rate.toFixed(1) + '%');
+  setText('info-p-industry_growth_rate', p.industry_growth_rate.toFixed(1) + '%');
+  setText('info-p-marketing_spend', p.marketing_spend.toFixed(1) + '%');
+  setText('info-p-profit_margin', p.profit_margin.toFixed(1) + '%');
+
+  const gap = p.growth_rate - p.industry_growth_rate;
+  const gapText = gap >= 0
+    ? `${name} is growing ${gap.toFixed(1)} points faster than the industry — outperforming its segment.`
+    : `${name} is growing ${Math.abs(gap).toFixed(1)} points slower than the industry — underperforming its segment.`;
+  setText('info-p-growth-summary', gapText);
 }
 
 function quadrantBadgeClass(q) {
@@ -367,14 +469,6 @@ function updateSBUBadges() {
   });
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   EXECUTIVE STRIP  —  SBU-Level Aggregate KPIs
-   ══════════════════════════════════════════════════════════════════ */
-
-/**
- * Calculates and renders all top-strip KPIs for the currently active SBU.
- * Called on: initial load, SBU switch, slider change.
- */
 function updateExecStrip() {
   const names = getActiveSBUProductNames();
 
@@ -391,56 +485,38 @@ function updateExecStrip() {
     return;
   }
 
-  // 1. Combined Revenue
   const totalRevenue = names.reduce((sum, n) => sum + (state.products[n]?.revenue || 0), 0);
   setText('exec-total-revenue', formatRevenue(totalRevenue));
 
-  // 2. Combined Volume
   const totalVolume = names.reduce((sum, n) => sum + (state.products[n]?.sales_volume || 0), 0);
   setText('exec-total-volume', formatNumber(totalVolume) + ' units');
 
-  // 3. Revenue-Weighted Market Share
   const weightedMS = totalRevenue > 0
     ? names.reduce((sum, n) => sum + (state.products[n]?.market_share || 0) * (state.products[n]?.revenue || 0), 0) / totalRevenue
     : 0;
   setText('exec-avg-share', weightedMS.toFixed(1) + '%');
 
-  // 4. Quadrant Mix (live-coloured micro-badges)
   const counts = { Star: 0, 'Cash Cow': 0, 'Question Mark': 0, Dog: 0 };
   names.forEach(n => {
-    const q = getQuadrant(state.products[n].relative_market_share, state.products[n].industry_growth_rate);
+    const q = state.products[n].quadrant;
     if (counts[q] !== undefined) counts[q]++;
   });
 
   const mixEl = document.getElementById('exec-mix');
   if (mixEl) {
     const parts = [];
-    if (counts.Star > 0) {
-      parts.push(`<span style="background:${QUADRANT_COLORS.Star.bg};color:${QUADRANT_COLORS.Star.text};">${counts.Star} Star</span>`);
-    }
-    if (counts['Cash Cow'] > 0) {
-      parts.push(`<span style="background:${QUADRANT_COLORS['Cash Cow'].bg};color:${QUADRANT_COLORS['Cash Cow'].text};">${counts['Cash Cow']} CC</span>`);
-    }
-    if (counts['Question Mark'] > 0) {
-      parts.push(`<span style="background:${QUADRANT_COLORS['Question Mark'].bg};color:${QUADRANT_COLORS['Question Mark'].text};">${counts['Question Mark']} QM</span>`);
-    }
-    if (counts.Dog > 0) {
-      parts.push(`<span style="background:${QUADRANT_COLORS.Dog.bg};color:${QUADRANT_COLORS.Dog.text};">${counts.Dog} Dog</span>`);
-    }
+    if (counts.Star > 0) parts.push(`<span style="background:${QUADRANT_COLORS.Star.bg};color:${QUADRANT_COLORS.Star.text};">${counts.Star} Star</span>`);
+    if (counts['Cash Cow'] > 0) parts.push(`<span style="background:${QUADRANT_COLORS['Cash Cow'].bg};color:${QUADRANT_COLORS['Cash Cow'].text};">${counts['Cash Cow']} CC</span>`);
+    if (counts['Question Mark'] > 0) parts.push(`<span style="background:${QUADRANT_COLORS['Question Mark'].bg};color:${QUADRANT_COLORS['Question Mark'].text};">${counts['Question Mark']} QM</span>`);
+    if (counts.Dog > 0) parts.push(`<span style="background:${QUADRANT_COLORS.Dog.bg};color:${QUADRANT_COLORS.Dog.text};">${counts.Dog} Dog</span>`);
     mixEl.innerHTML = parts.join(' ') || '—';
   }
 
-  // 5. Portfolio Health Score + Gauge
   const health = calculateHealthScore(names, totalRevenue);
   setText('health-score', Math.round(health));
   updateGauge(health);
 }
 
-/**
- * Revenue-weighted portfolio health score (0–100).
- * Stars = 1.0, Cash Cows = 0.8, Question Marks = 0.5, Dogs = 0.2.
- * Normalised so all-Dogs = 0 and all-Stars = 100.
- */
 function calculateHealthScore(names, totalRevenue) {
   if (!names.length || totalRevenue <= 0) return 0;
 
@@ -449,18 +525,13 @@ function calculateHealthScore(names, totalRevenue) {
 
   names.forEach(n => {
     const p = state.products[n];
-    const q = getQuadrant(p.relative_market_share, p.industry_growth_rate);
-    weightedSum += (p.revenue || 0) * (weights[q] || 0);
+    weightedSum += (p.revenue || 0) * (weights[p.quadrant] || 0);
   });
 
-  const raw = weightedSum / totalRevenue; // 0.2 … 1.0
+  const raw = weightedSum / totalRevenue;
   return Math.max(0, Math.min(100, ((raw - 0.2) / 0.8) * 100));
 }
 
-/**
- * Animates the semi-circular SVG gauge.
- * @param {number} score 0–100
- */
 function updateGauge(score) {
   const fill = document.getElementById('gauge-fill');
   if (!fill) return;
@@ -469,13 +540,11 @@ function updateGauge(score) {
   const offset = 251 * (1 - clamped / 100);
   fill.style.strokeDashoffset = Math.max(0, offset);
 
-  let color = '#4ade80'; // green
-  if (clamped < 45) color = '#f87171';      // red
-  else if (clamped < 72) color = '#fbbf24'; // amber
+  let color = '#22c55e';
+  if (clamped < 45) color = '#ef4444';
+  else if (clamped < 72) color = '#f59e0b';
   fill.style.stroke = color;
 }
-
-/* ═══════════════════════════════════════════════════════════════════ */
 
 function generateRecommendation(productName, prevQuadrant) {
   const p = state.products[productName];
@@ -552,16 +621,42 @@ function generateAndRenderRecommendation(prevQuadrant) {
   setText('rec-investment', rec.investment);
   setText('rec-potential', rec.potential);
 
-  // Growth vs. Industry gap (previously missing)
-  const growthGap = p.growth_rate - p.industry_growth_rate;
-  const gapStr = (growthGap >= 0 ? '+' : '') + growthGap.toFixed(1) + '%';
-  setText('rec-growth-gap', gapStr);
-
   const currEl = document.getElementById('rec-curr-quadrant');
   if (currEl) {
     const c = QUADRANT_COLORS[rec.currentQuadrant];
     if (c) { currEl.style.background = c.bg; currEl.style.color = c.text; }
   }
+}
+
+function renderPerformanceAnalysis() {
+  const name = state.selectedProduct;
+  const p = state.products[name];
+  if (!p) return;
+
+  setText('perf-product-label', `${name} · ${p.sbu}`);
+
+  const salesText = p.sales_volume >= 200000
+    ? `${name} moves a high volume of ${formatNumber(p.sales_volume)} units, giving it strong scale advantages in its segment.`
+    : `${name} sells ${formatNumber(p.sales_volume)} units — a moderate-to-low volume that limits scale economies.`;
+  setText('perf-sales-performance', salesText);
+
+  const investmentEfficiency = p.investment_level > 0 ? (p.profit / p.investment_level) : 0;
+  const revText = p.profit_margin >= 20
+    ? `Revenue of ₹${formatRevenueLong(p.revenue)} converts efficiently into profit at a ${p.profit_margin.toFixed(1)}% margin. Current investment level of ${p.investment_level}% is well-utilised.`
+    : `Revenue of ₹${formatRevenueLong(p.revenue)} carries a thinner ${p.profit_margin.toFixed(1)}% margin. At ${p.investment_level}% investment, capital efficiency could be improved.`;
+  setText('perf-revenue-performance', revText);
+
+  const metrics = {
+    'Growth Rate': p.growth_rate,
+    'Profit Margin': p.profit_margin,
+    'Investment Level': p.investment_level,
+    'Sales Volume Index': Math.min(100, (p.sales_volume / 10000)),
+  };
+  const entries = Object.entries(metrics);
+  const strongest = entries.reduce((a, b) => (b[1] > a[1] ? b : a));
+  const weakest = entries.reduce((a, b) => (b[1] < a[1] ? b : a));
+  setText('perf-strongest-metric', strongest[0]);
+  setText('perf-weakest-metric', weakest[0]);
 }
 
 function getActiveSBUProductNames() {
@@ -575,7 +670,7 @@ function getActiveSBUValues(field) {
 function getActiveSBUColors() {
   return getActiveSBUProductNames().map(n => {
     const hex = PRODUCT_MARKER_COLORS[n] || '#64748b';
-    return hex + 'bf';
+    return hex + 'd9';
   });
 }
 
@@ -590,9 +685,9 @@ function buildBarChart(canvasId, label, values, names, colors, suffix) {
         label,
         data: values,
         backgroundColor: colors,
-        borderColor: colors.map(c => c.replace('bf', 'ff')),
-        borderWidth: 1,
-        borderRadius: 4,
+        borderColor: colors.map(c => c.replace('d9', 'ff')),
+        borderWidth: 1.5,
+        borderRadius: 5,
       }],
     },
     options: {
@@ -604,7 +699,7 @@ function buildBarChart(canvasId, label, values, names, colors, suffix) {
         tooltip: { callbacks: { label: ctx => ` ${formatChartValue(ctx.parsed.x, suffix)}` } },
       },
       scales: {
-        x: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 } } },
+        x: { grid: { color: '#eef2f7' }, ticks: { font: { size: 10 } } },
         y: { grid: { display: false }, ticks: { font: { size: 10 } } },
       },
     },
@@ -620,10 +715,10 @@ function buildQuadrantChart(canvasId) {
       labels: ['Star', 'Cash Cow', 'Question Mark', 'Dog'],
       datasets: [{
         data: [0, 0, 0, 0],
-        backgroundColor: ['#dbeafe', '#dcfce7', '#fef9c3', '#ffe4e6'],
-        borderColor: ['#1d4ed8', '#15803d', '#b45309', '#9f1239'],
+        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#f43f5e'],
+        borderColor: ['#1d4ed8', '#047857', '#b45309', '#be123c'],
         borderWidth: 2,
-        hoverOffset: 8,
+        hoverOffset: 10,
       }],
     },
     options: {
@@ -641,13 +736,13 @@ function buildQuadrantChart(canvasId) {
 function countQuadrantsForActiveSBU() {
   const counts = { Star: 0, 'Cash Cow': 0, 'Question Mark': 0, Dog: 0 };
   getActiveSBUProductNames().forEach(n => {
-    const q = getQuadrant(state.products[n].relative_market_share, state.products[n].industry_growth_rate);
+    const q = state.products[n].quadrant;
     if (counts[q] !== undefined) counts[q]++;
   });
   return counts;
 }
 
-function initCharts() {
+function initStrategicCharts() {
   Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
   Chart.defaults.font.size = 11;
   Chart.defaults.color = '#64748b';
@@ -655,24 +750,23 @@ function initCharts() {
   const names = getActiveSBUProductNames();
   const colors = getActiveSBUColors();
 
-  charts.sales = buildBarChart(
-    'chart-sales', 'Sales Volume (Units)',
-    getActiveSBUValues('sales_volume'), names, colors, ' units',
-  );
-  charts.revenue = buildBarChart(
-    'chart-revenue', 'Revenue (₹ B)',
-    getActiveSBUValues('revenue').map(r => +(r / 1e9).toFixed(2)), names, colors, ' B',
-  );
-  charts.marketshare = buildBarChart(
-    'chart-marketshare', 'Market Share (%)',
-    getActiveSBUValues('market_share'), names, colors, '%',
-  );
-  charts.growth = buildBarChart(
-    'chart-growth', 'Industry Growth Rate (%)',
-    getActiveSBUValues('industry_growth_rate'), names, colors, '%',
-  );
+  charts.marketshare = buildBarChart('chart-marketshare', 'Market Share (%)', getActiveSBUValues('market_share'), names, colors, '%');
+  charts.growth = buildBarChart('chart-growth', 'Industry Growth Rate (%)', getActiveSBUValues('industry_growth_rate'), names, colors, '%');
   charts.quadrant = buildQuadrantChart('chart-quadrant');
   updateQuadrantChart();
+}
+
+function initPerformanceCharts() {
+  Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+  Chart.defaults.font.size = 11;
+  Chart.defaults.color = '#64748b';
+
+  const names = getActiveSBUProductNames();
+  const colors = getActiveSBUColors();
+
+  charts.sales = buildBarChart('chart-sales', 'Sales Volume (Units)', getActiveSBUValues('sales_volume'), names, colors, ' units');
+  charts.revenue = buildBarChart('chart-revenue', 'Revenue (₹ B)', getActiveSBUValues('revenue').map(r => +(r / 1e9).toFixed(2)), names, colors, ' B');
+  charts.profit = buildBarChart('chart-profit', 'Profit (₹ B)', getActiveSBUValues('profit').map(r => +(r / 1e9).toFixed(2)), names, colors, ' B');
 }
 
 function updateAllCharts() {
@@ -684,14 +778,15 @@ function updateAllCharts() {
     chart.data.labels = names;
     chart.data.datasets[0].data = values;
     chart.data.datasets[0].backgroundColor = colors;
-    chart.data.datasets[0].borderColor = colors.map(c => c.replace('bf', 'ff'));
+    chart.data.datasets[0].borderColor = colors.map(c => c.replace('d9', 'ff'));
     chart.update('none');
   };
 
-  update(charts.sales, getActiveSBUValues('sales_volume'));
-  update(charts.revenue, getActiveSBUValues('revenue').map(r => +(r / 1e9).toFixed(2)));
   update(charts.marketshare, getActiveSBUValues('market_share'));
   update(charts.growth, getActiveSBUValues('industry_growth_rate'));
+  update(charts.sales, getActiveSBUValues('sales_volume'));
+  update(charts.revenue, getActiveSBUValues('revenue').map(r => +(r / 1e9).toFixed(2)));
+  update(charts.profit, getActiveSBUValues('profit').map(r => +(r / 1e9).toFixed(2)));
   updateQuadrantChart();
 }
 
@@ -703,15 +798,15 @@ function updateQuadrantChart() {
 }
 
 function refreshAll() {
-  loadSliders(state.selectedProduct);
-  updateInfoPanel();
+  loadControls(state.selectedProduct);
+  updateInfoPanels();
   activateSBU(state.activeSBU);
   syncProductButtonHighlight();
   updateNavQuadrantDots();
   updateSBUBadges();
   updateExecStrip();
   generateAndRenderRecommendation(state.previousQuadrant[state.selectedProduct] || '');
-  setText('control-product-name', state.selectedProduct);
+  renderPerformanceAnalysis();
 }
 
 function setText(id, value) {
@@ -742,42 +837,64 @@ function formatChartValue(val, suffix) {
   return val.toFixed(1) + suffix;
 }
 
-function attachAIInsightButton() {
-  const btn = document.getElementById('btn-ai-insight');
-  if (!btn) return;
+function attachAIInsightButtons() {
+  const strategyBtn = document.getElementById('btn-strategy-insight');
+  if (strategyBtn) {
+    strategyBtn.addEventListener('click', async () => {
+      const name = state.selectedProduct;
+      const p = state.products[name];
+      if (!p) return;
 
-  btn.addEventListener('click', async () => {
-    const name = state.selectedProduct;
-    const p = state.products[name];
-    if (!p) return;
+      const target = document.getElementById('rec-strategy-ai-insight');
+      target.textContent = 'Generating insight...';
+      strategyBtn.disabled = true;
 
-    const target = document.getElementById('rec-ai-insight');
-    target.textContent = 'Generating insight...';
-    btn.disabled = true;
-
-    try {
-      const res = await fetch('/api/gemini-insight', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ product: name, data: p }),
-      });
-      const json = await res.json();
-
-      if (json.insight) {
-        target.textContent = json.insight;
-      } else {
-        target.textContent = 'Error: ' + (json.error || 'Unknown error');
+      try {
+        const res = await fetch('/api/strategy-insight', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ product: name, data: { ...p, quadrant: p.quadrant } }),
+        });
+        const json = await res.json();
+        target.textContent = json.insight || ('Error: ' + (json.error || 'Unknown error'));
+      } catch (err) {
+        target.textContent = 'Request failed: ' + err.message;
+      } finally {
+        strategyBtn.disabled = false;
       }
-    } catch (err) {
-      target.textContent = 'Request failed: ' + err.message;
-    } finally {
-      btn.disabled = false;
-    }
-  });
+    });
+  }
+
+  const performanceBtn = document.getElementById('btn-performance-insight');
+  if (performanceBtn) {
+    performanceBtn.addEventListener('click', async () => {
+      const name = state.selectedProduct;
+      const p = state.products[name];
+      if (!p) return;
+
+      const target = document.getElementById('rec-performance-ai-insight');
+      target.textContent = 'Generating insight...';
+      performanceBtn.disabled = true;
+
+      try {
+        const res = await fetch('/api/performance-insight', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ product: name, data: p }),
+        });
+        const json = await res.json();
+        target.textContent = json.insight || ('Error: ' + (json.error || 'Unknown error'));
+      } catch (err) {
+        target.textContent = 'Request failed: ' + err.message;
+      } finally {
+        performanceBtn.disabled = false;
+      }
+    });
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  attachAIInsightButton();
+  attachAIInsightButtons();
   initAIChat();
 });
 

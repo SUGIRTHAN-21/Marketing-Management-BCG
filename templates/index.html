@@ -27,7 +27,7 @@
         <div class="header-logo"><i class="bi bi-bar-chart-steps"></i></div>
         <div>
           <div class="header-title">AI Strategic Portfolio Analyzer</div>
-          <div class="header-subtitle">BCG Matrix &middot; Strategy Simulation &middot; Bajaj Auto Ltd.</div>
+          <div class="header-subtitle">BCG Matrix &middot; Business Performance &middot; Bajaj Auto Ltd.</div>
         </div>
       </div>
       <div class="header-tags">
@@ -72,6 +72,23 @@
       </div>
     </div>
   </header>
+
+  <div class="module-tabs">
+    <button class="module-tab-btn active" id="tab-strategic" data-module="strategic">
+      <i class="bi bi-diagram-3-fill"></i>
+      <span class="module-tab-text">
+        <span class="module-tab-title">Strategic Portfolio Analysis</span>
+        <span class="module-tab-sub">BCG Matrix</span>
+      </span>
+    </button>
+    <button class="module-tab-btn" id="tab-performance" data-module="performance">
+      <i class="bi bi-graph-up-arrow"></i>
+      <span class="module-tab-text">
+        <span class="module-tab-title">Business Performance Analysis</span>
+        <span class="module-tab-sub">Operational &amp; Financial</span>
+      </span>
+    </button>
+  </div>
 
   <div class="main-wrapper">
     <div class="layout-grid">
@@ -123,61 +140,112 @@
           </div>
         </div>
 
-        <div class="panel-section control-panel">
-          <div class="panel-section-header"><i class="bi bi-sliders2-vertical"></i><span>Business Control Panel</span>
-          </div>
-          <div class="control-product-label">Editing: <strong id="control-product-name">Pulsar</strong></div>
+        <div class="panel-section control-panel" id="control-panel-strategic">
+          <div class="panel-section-header"><i class="bi bi-sliders2-vertical"></i><span>Strategic Control
+              Panel</span></div>
+          <div class="control-product-label">Editing: <strong id="control-product-name-s">Pulsar</strong></div>
 
-          <div class="slider-group" id="sg-market_share">
-            <div class="slider-header"><label class="slider-label" for="sl-market_share">Market Share</label><span
-                class="slider-value" id="val-market_share">35.2<span class="slider-unit">%</span></span></div>
-            <input type="range" id="sl-market_share" class="form-range custom-range" min="0" max="100" step="0.1"
+          <div class="slider-group" id="sg-s-market_share">
+            <div class="slider-header"><label class="slider-label" for="sl-s-market_share">Market Share</label><span
+                class="slider-value" id="val-s-market_share">35.2<span class="slider-unit">%</span></span></div>
+            <input type="range" id="sl-s-market_share" class="form-range custom-range" min="0" max="100" step="0.1"
               value="35.2" data-field="market_share" />
           </div>
 
-          <div class="slider-group" id="sg-relative_market_share">
-            <div class="slider-header"><label class="slider-label" for="sl-relative_market_share">Relative Market
-                Share</label><span class="slider-value" id="val-relative_market_share">1.80<span
-                  class="slider-unit">x</span></span></div>
-            <input type="range" id="sl-relative_market_share" class="form-range custom-range" min="0" max="5"
-              step="0.01" value="1.80" data-field="relative_market_share" />
+          <div class="slider-group" id="sg-s-largest_competitor_market_share">
+            <div class="slider-header"><label class="slider-label" for="sl-s-largest_competitor_market_share">Largest
+                Competitor Market Share</label><span class="slider-value"
+                id="val-s-largest_competitor_market_share">24.8<span class="slider-unit">%</span></span></div>
+            <input type="range" id="sl-s-largest_competitor_market_share" class="form-range custom-range" min="0.1"
+              max="100" step="0.1" value="24.8" data-field="largest_competitor_market_share" />
           </div>
 
-          <div class="slider-group" id="sg-industry_growth_rate">
-            <div class="slider-header"><label class="slider-label" for="sl-industry_growth_rate">Industry Growth
-                Rate</label><span class="slider-value" id="val-industry_growth_rate">12.5<span
+          <div class="slider-group" id="sg-s-industry_growth_rate">
+            <div class="slider-header"><label class="slider-label" for="sl-s-industry_growth_rate">Industry Growth
+                Rate</label><span class="slider-value" id="val-s-industry_growth_rate">12.5<span
                   class="slider-unit">%</span></span></div>
-            <input type="range" id="sl-industry_growth_rate" class="form-range custom-range" min="0" max="50" step="0.1"
-              value="12.5" data-field="industry_growth_rate" />
+            <input type="range" id="sl-s-industry_growth_rate" class="form-range custom-range" min="0" max="50"
+              step="0.1" value="12.5" data-field="industry_growth_rate" />
           </div>
 
-          <div class="slider-group" id="sg-growth_rate">
-            <div class="slider-header"><label class="slider-label" for="sl-growth_rate">Growth Rate</label><span
-                class="slider-value" id="val-growth_rate">15.3<span class="slider-unit">%</span></span></div>
-            <input type="range" id="sl-growth_rate" class="form-range custom-range" min="-20" max="50" step="0.1"
-              value="15.3" data-field="growth_rate" />
+          <div class="slider-group computed-field" id="sg-s-relative_market_share">
+            <div class="slider-header"><label class="slider-label">Relative Market Share<span
+                  class="computed-tag">Auto</span></label><span class="slider-value"
+                id="val-s-relative_market_share">1.42<span class="slider-unit">x</span></span></div>
+            <div class="computed-note">Relative Market Share = Market Share ÷ Largest Competitor Market Share</div>
           </div>
 
-          <div class="slider-group" id="sg-sales_volume">
-            <div class="slider-header"><label class="slider-label" for="sl-sales_volume">Sales Volume</label><span
-                class="slider-value" id="val-sales_volume">450,000<span class="slider-unit"> u</span></span></div>
-            <input type="range" id="sl-sales_volume" class="form-range custom-range" min="0" max="1000000" step="100"
+          <div class="slider-group computed-field" id="sg-s-quadrant">
+            <div class="slider-header"><label class="slider-label">Current BCG Quadrant<span
+                  class="computed-tag">Auto</span></label><span class="slider-value"
+                id="val-s-quadrant">Star</span></div>
+            <div class="computed-note">Derived from Relative Market Share vs. Industry Growth Rate</div>
+          </div>
+        </div>
+
+        <div class="panel-section control-panel" id="control-panel-performance" style="display:none;">
+          <div class="panel-section-header"><i class="bi bi-sliders2-vertical"></i><span>Business Control
+              Panel</span></div>
+          <div class="control-product-label">Editing: <strong id="control-product-name-p">Pulsar</strong></div>
+
+          <div class="slider-group" id="sg-p-sales_volume">
+            <div class="slider-header"><label class="slider-label" for="sl-p-sales_volume">Sales Volume</label><span
+                class="slider-value" id="val-p-sales_volume">450,000<span class="slider-unit"> u</span></span></div>
+            <input type="range" id="sl-p-sales_volume" class="form-range custom-range" min="0" max="1000000" step="100"
               value="450000" data-field="sales_volume" />
           </div>
 
-          <div class="slider-group" id="sg-revenue">
-            <div class="slider-header"><label class="slider-label" for="sl-revenue">Revenue</label><span
-                class="slider-value" id="val-revenue">₹18.0B<span class="slider-unit"></span></span></div>
-            <input type="range" id="sl-revenue" class="form-range custom-range" min="0" max="100000000000"
-              step="10000000" value="18000000000" data-field="revenue" />
+          <div class="slider-group" id="sg-p-average_selling_price">
+            <div class="slider-header"><label class="slider-label" for="sl-p-average_selling_price">Average Selling
+                Price</label><span class="slider-value" id="val-p-average_selling_price">₹40,000<span
+                  class="slider-unit"></span></span></div>
+            <input type="range" id="sl-p-average_selling_price" class="form-range custom-range" min="0" max="200000"
+              step="100" value="40000" data-field="average_selling_price" />
           </div>
 
-          <div class="slider-group" id="sg-investment_level">
-            <div class="slider-header"><label class="slider-label" for="sl-investment_level">Investment
-                Level</label><span class="slider-value" id="val-investment_level">65<span
+          <div class="slider-group" id="sg-p-investment_level">
+            <div class="slider-header"><label class="slider-label" for="sl-p-investment_level">Investment
+                Level</label><span class="slider-value" id="val-p-investment_level">65<span
                   class="slider-unit">%</span></span></div>
-            <input type="range" id="sl-investment_level" class="form-range custom-range" min="0" max="100" step="1"
+            <input type="range" id="sl-p-investment_level" class="form-range custom-range" min="0" max="100" step="1"
               value="65" data-field="investment_level" />
+          </div>
+
+          <div class="slider-group" id="sg-p-growth_rate">
+            <div class="slider-header"><label class="slider-label" for="sl-p-growth_rate">Product Growth
+                Rate</label><span class="slider-value" id="val-p-growth_rate">15.3<span
+                  class="slider-unit">%</span></span></div>
+            <input type="range" id="sl-p-growth_rate" class="form-range custom-range" min="-20" max="60" step="0.1"
+              value="15.3" data-field="growth_rate" />
+          </div>
+
+          <div class="slider-group" id="sg-p-marketing_spend">
+            <div class="slider-header"><label class="slider-label" for="sl-p-marketing_spend">Marketing
+                Spend</label><span class="slider-value" id="val-p-marketing_spend">8.0<span
+                  class="slider-unit">%</span></span></div>
+            <input type="range" id="sl-p-marketing_spend" class="form-range custom-range" min="0" max="30" step="0.5"
+              value="8" data-field="marketing_spend" />
+          </div>
+
+          <div class="slider-group" id="sg-p-profit_margin">
+            <div class="slider-header"><label class="slider-label" for="sl-p-profit_margin">Profit Margin</label><span
+                class="slider-value" id="val-p-profit_margin">22.0<span class="slider-unit">%</span></span></div>
+            <input type="range" id="sl-p-profit_margin" class="form-range custom-range" min="0" max="50" step="0.5"
+              value="22" data-field="profit_margin" />
+          </div>
+
+          <div class="slider-group computed-field" id="sg-p-revenue">
+            <div class="slider-header"><label class="slider-label">Revenue<span
+                  class="computed-tag">Auto</span></label><span class="slider-value" id="val-p-revenue">₹18.0B</span>
+            </div>
+            <div class="computed-note">Revenue = Sales Volume &times; Average Selling Price</div>
+          </div>
+
+          <div class="slider-group computed-field" id="sg-p-profit">
+            <div class="slider-header"><label class="slider-label">Profit<span
+                  class="computed-tag">Auto</span></label><span class="slider-value" id="val-p-profit">₹3.96B</span>
+            </div>
+            <div class="computed-note">Profit = Revenue &times; Profit Margin</div>
           </div>
         </div>
 
@@ -186,198 +254,297 @@
       <main class="right-panel">
         <div class="right-inner">
 
-          <div class="grid-row grid-row-top">
-            <div class="card dashboard-card">
-              <div class="card-header-custom">
-                <div class="card-title-group"><i class="bi bi-diagram-3-fill"></i><span>BCG Matrix</span></div>
-                <span class="card-subtitle">Relative Market Share vs. Industry Growth Rate</span>
+          <div id="panel-strategic">
+
+            <div class="grid-row grid-row-top">
+              <div class="card dashboard-card">
+                <div class="card-header-custom">
+                  <div class="card-title-group"><i class="bi bi-diagram-3-fill"></i><span>BCG Matrix</span></div>
+                  <span class="card-subtitle">Relative Market Share vs. Industry Growth Rate</span>
+                </div>
+                <div class="card-body-custom">
+                  <div class="bcg-wrapper">
+                    <div class="bcg-y-axis-label"><span>Industry Growth Rate (%)</span><i class="bi bi-arrow-up"></i>
+                    </div>
+                    <div class="bcg-inner">
+                      <div class="bcg-matrix-row">
+                        <div class="bcg-matrix" id="bcg-matrix">
+                          <div class="bcg-q bcg-q-qm" id="bcg-qm">
+                            <div class="bcg-q-label"><i class="bi bi-question-circle-fill"></i>Question Mark</div>
+                          </div>
+                          <div class="bcg-q bcg-q-star" id="bcg-star">
+                            <div class="bcg-q-label"><i class="bi bi-star-fill"></i>Star</div>
+                          </div>
+                          <div class="bcg-q bcg-q-dog" id="bcg-dog">
+                            <div class="bcg-q-label"><i class="bi bi-shield-x"></i>Dog</div>
+                          </div>
+                          <div class="bcg-q bcg-q-cc" id="bcg-cc">
+                            <div class="bcg-q-label"><i class="bi bi-cash-coin"></i>Cash Cow</div>
+                          </div>
+                          <div class="bcg-vline"></div>
+                          <div class="bcg-hline"></div>
+                          <div class="bcg-thresh-x">1.0&times;</div>
+                          <div class="bcg-thresh-y">10%</div>
+
+                          <img class="product-marker pm-logo" id="pm-Pulsar" data-product="Pulsar" data-sbu="2-Wheelers"
+                            src="{{ url_for('static', filename='images/logo_pulsar.png') }}" alt="Pulsar"
+                            title="Pulsar" />
+                          <img class="product-marker pm-logo" id="pm-Platina" data-product="Platina" data-sbu="2-Wheelers"
+                            src="{{ url_for('static', filename='images/logo_platina.png') }}" alt="Platina"
+                            title="Platina" />
+                          <img class="product-marker pm-logo" id="pm-Dominar" data-product="Dominar" data-sbu="2-Wheelers"
+                            src="{{ url_for('static', filename='images/logo_dominar.png') }}" alt="Dominar"
+                            title="Dominar" />
+                          <img class="product-marker pm-logo" id="pm-Avenger" data-product="Avenger" data-sbu="2-Wheelers"
+                            src="{{ url_for('static', filename='images/logo_avenger.png') }}" alt="Avenger"
+                            title="Avenger" />
+
+                          <div class="product-marker" id="pm-ChetakEV" data-product="Chetak EV" data-sbu="2-Wheelers">
+                            <span class="pm-abbr">EV</span><span class="pm-name">Chetak EV</span></div>
+                          <div class="product-marker" id="pm-REETec" data-product="RE E-Tec" data-sbu="3-Wheelers"><span
+                              class="pm-abbr">RE</span><span class="pm-name">RE E-Tec</span></div>
+                          <div class="product-marker" id="pm-Maxima" data-product="Maxima" data-sbu="3-Wheelers"><span
+                              class="pm-abbr">MX</span><span class="pm-name">Maxima</span></div>
+                          <div class="product-marker" id="pm-GoGo" data-product="GoGo" data-sbu="3-Wheelers"><span
+                              class="pm-abbr">GG</span><span class="pm-name">GoGo</span></div>
+                          <div class="product-marker" id="pm-LowEndICE" data-product="Low-End ICE" data-sbu="3-Wheelers">
+                            <span class="pm-abbr">LI</span><span class="pm-name">Low-End ICE</span></div>
+                        </div>
+                        <div class="bcg-y-scale">
+                          <span>50%</span><span>40%</span><span>30%</span><span>20%</span><span>10%</span><span>0%</span>
+                        </div>
+                      </div>
+                      <div class="bcg-x-scale">
+                        <span>0</span><span>1&times;</span><span>2&times;</span><span>3&times;</span><span>4&times;</span><span>5&times;</span>
+                      </div>
+                    </div>
+                    <div class="bcg-x-axis-label">Relative Market Share (&times;)<i class="bi bi-arrow-right"></i></div>
+                  </div>
+                </div>
               </div>
-              <div class="card-body-custom">
-                <div class="bcg-wrapper">
-                  <div class="bcg-y-axis-label"><span>Industry Growth Rate (%)</span><i class="bi bi-arrow-up"></i>
+
+              <div class="card dashboard-card">
+                <div class="card-header-custom">
+                  <div class="card-title-group"><i class="bi bi-compass-fill"></i><span>Market Position</span></div>
+                  <span id="info-s-quadrant-badge" class="quadrant-badge qb-star">Star</span>
+                </div>
+                <div class="card-body-custom">
+                  <div class="info-product-banner">
+                    <div class="info-product-name" id="info-s-product-name">Pulsar</div>
+                    <div class="info-sbu-name" id="info-s-sbu-name">2-Wheelers</div>
                   </div>
-                  <div class="bcg-inner">
-                    <div class="bcg-matrix-row">
-                      <div class="bcg-matrix" id="bcg-matrix">
-                        <div class="bcg-q bcg-q-qm" id="bcg-qm">
-                          <div class="bcg-q-label"><i class="bi bi-question-circle-fill"></i>Question Mark</div>
-                        </div>
-                        <div class="bcg-q bcg-q-star" id="bcg-star">
-                          <div class="bcg-q-label"><i class="bi bi-star-fill"></i>Star</div>
-                        </div>
-                        <div class="bcg-q bcg-q-dog" id="bcg-dog">
-                          <div class="bcg-q-label"><i class="bi bi-shield-x"></i>Dog</div>
-                        </div>
-                        <div class="bcg-q bcg-q-cc" id="bcg-cc">
-                          <div class="bcg-q-label"><i class="bi bi-cash-coin"></i>Cash Cow</div>
-                        </div>
-                        <div class="bcg-vline"></div>
-                        <div class="bcg-hline"></div>
-                        <div class="bcg-thresh-x">1.0&times;</div>
-                        <div class="bcg-thresh-y">10%</div>
-
-                        <img class="product-marker pm-logo" id="pm-Pulsar" data-product="Pulsar" data-sbu="2-Wheelers"
-                          src="{{ url_for('static', filename='images/logo_pulsar.png') }}" alt="Pulsar"
-                          title="Pulsar" />
-                        <img class="product-marker pm-logo" id="pm-Platina" data-product="Platina" data-sbu="2-Wheelers"
-                          src="{{ url_for('static', filename='images/logo_platina.png') }}" alt="Platina"
-                          title="Platina" />
-                        <img class="product-marker pm-logo" id="pm-Dominar" data-product="Dominar" data-sbu="2-Wheelers"
-                          src="{{ url_for('static', filename='images/logo_dominar.png') }}" alt="Dominar"
-                          title="Dominar" />
-                        <img class="product-marker pm-logo" id="pm-Avenger" data-product="Avenger" data-sbu="2-Wheelers"
-                          src="{{ url_for('static', filename='images/logo_avenger.png') }}" alt="Avenger"
-                          title="Avenger" />
-
-                        <div class="product-marker" id="pm-ChetakEV" data-product="Chetak EV" data-sbu="2-Wheelers">
-                          <span class="pm-abbr">EV</span><span class="pm-name">Chetak EV</span></div>
-                        <div class="product-marker" id="pm-REETec" data-product="RE E-Tec" data-sbu="3-Wheelers"><span
-                            class="pm-abbr">RE</span><span class="pm-name">RE E-Tec</span></div>
-                        <div class="product-marker" id="pm-Maxima" data-product="Maxima" data-sbu="3-Wheelers"><span
-                            class="pm-abbr">MX</span><span class="pm-name">Maxima</span></div>
-                        <div class="product-marker" id="pm-GoGo" data-product="GoGo" data-sbu="3-Wheelers"><span
-                            class="pm-abbr">GG</span><span class="pm-name">GoGo</span></div>
-                        <div class="product-marker" id="pm-LowEndICE" data-product="Low-End ICE" data-sbu="3-Wheelers">
-                          <span class="pm-abbr">LI</span><span class="pm-name">Low-End ICE</span></div>
-                      </div>
-                      <div class="bcg-y-scale">
-                        <span>50%</span><span>40%</span><span>30%</span><span>20%</span><span>10%</span><span>0%</span>
-                      </div>
+                  <div class="info-grid">
+                    <div class="info-metric">
+                      <div class="info-metric-label"><i class="bi bi-pie-chart-fill"></i>Market Share</div>
+                      <div class="info-metric-value" id="info-s-market_share">35.2%</div>
                     </div>
-                    <div class="bcg-x-scale">
-                      <span>0</span><span>1&times;</span><span>2&times;</span><span>3&times;</span><span>4&times;</span><span>5&times;</span>
+                    <div class="info-metric">
+                      <div class="info-metric-label"><i class="bi bi-arrows-expand-vertical"></i>Relative Market Share
+                      </div>
+                      <div class="info-metric-value" id="info-s-relative_market_share">1.42&times;</div>
+                    </div>
+                    <div class="info-metric">
+                      <div class="info-metric-label"><i class="bi bi-activity"></i>Industry Growth Rate</div>
+                      <div class="info-metric-value" id="info-s-industry_growth_rate">12.5%</div>
+                    </div>
+                    <div class="info-metric highlight-metric">
+                      <div class="info-metric-label"><i class="bi bi-crosshair2"></i>Current BCG Quadrant</div>
+                      <div class="info-metric-value" id="info-s-current-quadrant">Star</div>
                     </div>
                   </div>
-                  <div class="bcg-x-axis-label">Relative Market Share (&times;)<i class="bi bi-arrow-right"></i></div>
                 </div>
               </div>
             </div>
 
-            <div class="card dashboard-card">
-              <div class="card-header-custom">
-                <div class="card-title-group"><i class="bi bi-clipboard2-data-fill"></i><span>Business
-                    Information</span></div>
-                <span id="info-quadrant-badge" class="quadrant-badge qb-star">Star</span>
-              </div>
-              <div class="card-body-custom">
-                <div class="info-product-banner">
-                  <div class="info-product-name" id="info-product-name">Pulsar</div>
-                  <div class="info-sbu-name" id="info-sbu-name">2-Wheelers</div>
+            <div class="grid-row grid-row-rec">
+              <div class="card dashboard-card recommendation-card">
+                <div class="card-header-custom">
+                  <div class="card-title-group"><i class="bi bi-lightbulb-fill"></i><span>Strategic Recommendation
+                      Panel</span></div>
+                  <span class="card-subtitle" id="rec-product-label">Pulsar &middot; 2-Wheelers</span>
                 </div>
-                <div class="info-grid">
-                  <div class="info-metric">
-                    <div class="info-metric-label"><i class="bi bi-graph-up"></i>Sales Volume</div>
-                    <div class="info-metric-value" id="info-sales_volume">4,50,000 units</div>
-                  </div>
-                  <div class="info-metric">
-                    <div class="info-metric-label"><i class="bi bi-currency-rupee"></i>Revenue</div>
-                    <div class="info-metric-value" id="info-revenue">₹18.0 Billion</div>
-                  </div>
-                  <div class="info-metric">
-                    <div class="info-metric-label"><i class="bi bi-pie-chart-fill"></i>Market Share</div>
-                    <div class="info-metric-value" id="info-market_share">35.2%</div>
-                  </div>
-                  <div class="info-metric">
-                    <div class="info-metric-label"><i class="bi bi-arrows-expand-vertical"></i>Relative Market Share
+                <div class="card-body-custom rec-body">
+                  <div class="rec-block">
+                    <div class="rec-block-label">Quadrant Transition</div>
+                    <div class="rec-transition"><span class="rec-q-prev" id="rec-prev-quadrant">&mdash;</span><i
+                        class="bi bi-arrow-right-short"></i><span class="rec-q-curr" id="rec-curr-quadrant">Star</span>
                     </div>
-                    <div class="info-metric-value" id="info-relative_market_share">1.80&times;</div>
+                    <div class="rec-reason" id="rec-reason">Initial load &mdash; no prior state.</div>
                   </div>
-                  <div class="info-metric">
-                    <div class="info-metric-label"><i class="bi bi-activity"></i>Industry Growth Rate</div>
-                    <div class="info-metric-value" id="info-industry_growth_rate">12.5%</div>
+                  <div class="rec-block">
+                    <div class="rec-block-label">Why This Quadrant</div>
+                    <div class="rec-text" id="rec-analysis">Loading analysis&hellip;</div>
                   </div>
-                  <div class="info-metric">
-                    <div class="info-metric-label"><i class="bi bi-bar-chart-line-fill"></i>Product Growth Rate</div>
-                    <div class="info-metric-value" id="info-growth_rate">15.3%</div>
+                  <div class="rec-block">
+                    <div class="rec-block-label">Recommended Strategy</div>
+                    <div class="rec-text" id="rec-strategy">Loading strategy&hellip;</div>
                   </div>
-                  <div class="info-metric">
-                    <div class="info-metric-label"><i class="bi bi-wallet2"></i>Investment Level</div>
-                    <div class="info-metric-value" id="info-investment_level">65%</div>
+                  <div class="rec-block">
+                    <div class="rec-block-label">Investment &amp; Outlook</div>
+                    <div class="rec-kv"><span>Suggested Investment</span><strong id="rec-investment">&mdash;</strong>
+                    </div>
+                    <div class="rec-kv"><span>Future Growth Potential</span><strong id="rec-potential">&mdash;</strong>
+                    </div>
                   </div>
-                  <div class="info-metric highlight-metric">
-                    <div class="info-metric-label"><i class="bi bi-crosshair2"></i>Current BCG Quadrant</div>
-                    <div class="info-metric-value" id="info-current-quadrant">Star</div>
+                  <div class="rec-block" id="ai-strategy-block">
+                    <div class="rec-block-label">AI Strategic Insight</div>
+                    <button id="btn-strategy-insight" class="btn btn-sm" style="margin-bottom:8px;">
+                      <i class="bi bi-stars"></i> Analyze Strategy
+                    </button>
+                    <div class="rec-text" id="rec-strategy-ai-insight">Click "Analyze Strategy" for a live AI-powered
+                      strategic summary.</div>
                   </div>
                 </div>
               </div>
             </div>
+
+            <div class="grid-row grid-row-charts grid-row-charts-3">
+              <div class="card dashboard-card chart-card">
+                <div class="card-header-custom">
+                  <div class="card-title-group"><i class="bi bi-pie-chart-fill"></i><span>Market Share
+                      Comparison</span></div>
+                </div>
+                <div class="card-body-custom chart-body"><canvas id="chart-marketshare"></canvas></div>
+              </div>
+              <div class="card dashboard-card chart-card">
+                <div class="card-header-custom">
+                  <div class="card-title-group"><i class="bi bi-graph-up-arrow"></i><span>Industry Growth
+                      Comparison</span></div>
+                </div>
+                <div class="card-body-custom chart-body"><canvas id="chart-growth"></canvas></div>
+              </div>
+              <div class="card dashboard-card chart-card">
+                <div class="card-header-custom">
+                  <div class="card-title-group"><i class="bi bi-donut"></i><span>Quadrant Distribution</span></div>
+                </div>
+                <div class="card-body-custom chart-body"><canvas id="chart-quadrant"></canvas></div>
+              </div>
+            </div>
+
           </div>
 
-          <div class="grid-row grid-row-rec">
-            <div class="card dashboard-card recommendation-card">
-              <div class="card-header-custom">
-                <div class="card-title-group"><i class="bi bi-lightbulb-fill"></i><span>Strategic Recommendation
-                    Panel</span></div>
-                <span class="card-subtitle" id="rec-product-label">Pulsar &middot; 2-Wheelers</span>
-              </div>
-              <div class="card-body-custom rec-body">
-                <div class="rec-block">
-                  <div class="rec-block-label">Quadrant Transition</div>
-                  <div class="rec-transition"><span class="rec-q-prev" id="rec-prev-quadrant">&mdash;</span><i
-                      class="bi bi-arrow-right-short"></i><span class="rec-q-curr" id="rec-curr-quadrant">Star</span>
-                  </div>
-                  <div class="rec-reason" id="rec-reason">Initial load &mdash; no prior state.</div>
-                </div>
-                <div class="rec-block">
-                  <div class="rec-block-label">Business Analysis</div>
-                  <div class="rec-text" id="rec-analysis">Loading analysis&hellip;</div>
-                </div>
-                <div class="rec-block">
-                  <div class="rec-block-label">Recommended Strategy</div>
-                  <div class="rec-text" id="rec-strategy">Loading strategy&hellip;</div>
-                </div>
-                <div class="rec-block">
-                  <div class="rec-block-label">Investment &amp; Outlook</div>
-                  <div class="rec-kv"><span>Suggested Investment</span><strong id="rec-investment">&mdash;</strong>
-                  </div>
-                  <div class="rec-kv"><span>Future Growth Potential</span><strong id="rec-potential">&mdash;</strong>
-                  </div>
-                  <div class="rec-kv"><span>Growth vs. Industry</span><strong id="rec-growth-gap">&mdash;</strong></div>
-                </div>
-                <div class="rec-block" id="ai-insight-block">
-                  <div class="rec-block-label">AI Strategic Insight</div>
-                  <button id="btn-ai-insight" class="btn btn-sm" style="margin-bottom:8px;">
-                    <i class="bi bi-stars"></i> Generate AI Insight
-                  </button>
-                  <div class="rec-text" id="rec-ai-insight">Click "Generate AI Insight" for a live Gemini-powered analysis.</div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <div id="panel-performance" style="display:none;">
 
-          <div class="grid-row grid-row-charts">
-            <div class="card dashboard-card chart-card">
-              <div class="card-header-custom">
-                <div class="card-title-group"><i class="bi bi-bar-chart-fill"></i><span>Sales Comparison</span></div>
-              </div>
-              <div class="card-body-custom chart-body"><canvas id="chart-sales"></canvas></div>
-            </div>
-            <div class="card dashboard-card chart-card">
-              <div class="card-header-custom">
-                <div class="card-title-group"><i class="bi bi-currency-rupee"></i><span>Revenue Comparison</span></div>
-              </div>
-              <div class="card-body-custom chart-body"><canvas id="chart-revenue"></canvas></div>
-            </div>
-            <div class="card dashboard-card chart-card">
-              <div class="card-header-custom">
-                <div class="card-title-group"><i class="bi bi-donut"></i><span>Quadrant Distribution</span></div>
-              </div>
-              <div class="card-body-custom chart-body"><canvas id="chart-quadrant"></canvas></div>
-            </div>
-            <div class="card dashboard-card chart-card chart-card-wide">
-              <div class="card-header-custom">
-                <div class="card-title-group"><i class="bi bi-pie-chart-fill"></i><span>Market Share Comparison</span>
+            <div class="grid-row grid-row-top">
+              <div class="card dashboard-card">
+                <div class="card-header-custom">
+                  <div class="card-title-group"><i class="bi bi-clipboard2-data-fill"></i><span>Financial
+                      Performance</span></div>
+                  <span class="card-subtitle" id="info-p-perf-label">Performance Score</span>
+                </div>
+                <div class="card-body-custom">
+                  <div class="info-product-banner">
+                    <div class="info-product-name" id="info-p-product-name">Pulsar</div>
+                    <div class="info-sbu-name" id="info-p-sbu-name">2-Wheelers</div>
+                  </div>
+                  <div class="info-grid">
+                    <div class="info-metric">
+                      <div class="info-metric-label"><i class="bi bi-graph-up"></i>Sales Volume</div>
+                      <div class="info-metric-value" id="info-p-sales_volume">4,50,000 units</div>
+                    </div>
+                    <div class="info-metric">
+                      <div class="info-metric-label"><i class="bi bi-currency-rupee"></i>Revenue</div>
+                      <div class="info-metric-value" id="info-p-revenue">₹18.0 Billion</div>
+                    </div>
+                    <div class="info-metric">
+                      <div class="info-metric-label"><i class="bi bi-cash-stack"></i>Profit</div>
+                      <div class="info-metric-value" id="info-p-profit">₹3.96 Billion</div>
+                    </div>
+                    <div class="info-metric">
+                      <div class="info-metric-label"><i class="bi bi-tag-fill"></i>Average Selling Price</div>
+                      <div class="info-metric-value" id="info-p-average_selling_price">₹40,000</div>
+                    </div>
+                    <div class="info-metric">
+                      <div class="info-metric-label"><i class="bi bi-wallet2"></i>Investment Level</div>
+                      <div class="info-metric-value" id="info-p-investment_level">65%</div>
+                    </div>
+                    <div class="info-metric highlight-metric">
+                      <div class="info-metric-label"><i class="bi bi-speedometer"></i>Performance Score</div>
+                      <div class="info-metric-value" id="info-p-performance_score">72</div>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div class="card-body-custom chart-body"><canvas id="chart-marketshare"></canvas></div>
-            </div>
-            <div class="card dashboard-card chart-card chart-card-wide">
-              <div class="card-header-custom">
-                <div class="card-title-group"><i class="bi bi-graph-up-arrow"></i><span>Industry Growth
-                    Comparison</span></div>
+
+              <div class="card dashboard-card">
+                <div class="card-header-custom">
+                  <div class="card-title-group"><i class="bi bi-bar-chart-line-fill"></i><span>Growth Summary</span>
+                  </div>
+                </div>
+                <div class="card-body-custom">
+                  <div class="rec-block" style="margin-bottom:14px;">
+                    <div class="rec-block-label">Product vs. Industry Growth</div>
+                    <div class="rec-text" id="info-p-growth-summary">Loading growth summary&hellip;</div>
+                  </div>
+                  <div class="rec-kv"><span>Product Growth Rate</span><strong
+                      id="info-p-growth_rate">&mdash;</strong></div>
+                  <div class="rec-kv"><span>Industry Growth Rate</span><strong
+                      id="info-p-industry_growth_rate">&mdash;</strong></div>
+                  <div class="rec-kv"><span>Marketing Spend</span><strong id="info-p-marketing_spend">&mdash;</strong>
+                  </div>
+                  <div class="rec-kv"><span>Profit Margin</span><strong id="info-p-profit_margin">&mdash;</strong>
+                  </div>
+                </div>
               </div>
-              <div class="card-body-custom chart-body"><canvas id="chart-growth"></canvas></div>
             </div>
+
+            <div class="grid-row grid-row-rec">
+              <div class="card dashboard-card recommendation-card">
+                <div class="card-header-custom">
+                  <div class="card-title-group"><i class="bi bi-clipboard2-pulse-fill"></i><span>Business Performance
+                      Analysis</span></div>
+                  <span class="card-subtitle" id="perf-product-label">Pulsar &middot; 2-Wheelers</span>
+                </div>
+                <div class="card-body-custom rec-body">
+                  <div class="rec-block">
+                    <div class="rec-block-label">Sales Performance</div>
+                    <div class="rec-text" id="perf-sales-performance">Loading&hellip;</div>
+                  </div>
+                  <div class="rec-block">
+                    <div class="rec-block-label">Revenue &amp; Investment Effectiveness</div>
+                    <div class="rec-text" id="perf-revenue-performance">Loading&hellip;</div>
+                  </div>
+                  <div class="rec-block">
+                    <div class="rec-block-label">Strongest / Weakest Metric</div>
+                    <div class="rec-kv"><span>Strongest</span><strong id="perf-strongest-metric">&mdash;</strong>
+                    </div>
+                    <div class="rec-kv"><span>Weakest</span><strong id="perf-weakest-metric">&mdash;</strong></div>
+                  </div>
+                  <div class="rec-block" id="ai-performance-block">
+                    <div class="rec-block-label">AI Performance Insight</div>
+                    <button id="btn-performance-insight" class="btn btn-sm" style="margin-bottom:8px;">
+                      <i class="bi bi-stars"></i> Analyze Performance
+                    </button>
+                    <div class="rec-text" id="rec-performance-ai-insight">Click "Analyze Performance" for a live
+                      AI-powered business summary.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid-row grid-row-charts grid-row-charts-3">
+              <div class="card dashboard-card chart-card">
+                <div class="card-header-custom">
+                  <div class="card-title-group"><i class="bi bi-bar-chart-fill"></i><span>Sales Comparison</span>
+                  </div>
+                </div>
+                <div class="card-body-custom chart-body"><canvas id="chart-sales"></canvas></div>
+              </div>
+              <div class="card dashboard-card chart-card">
+                <div class="card-header-custom">
+                  <div class="card-title-group"><i class="bi bi-currency-rupee"></i><span>Revenue Comparison</span>
+                  </div>
+                </div>
+                <div class="card-body-custom chart-body"><canvas id="chart-revenue"></canvas></div>
+              </div>
+              <div class="card dashboard-card chart-card">
+                <div class="card-header-custom">
+                  <div class="card-title-group"><i class="bi bi-cash-stack"></i><span>Profit Comparison</span></div>
+                </div>
+                <div class="card-body-custom chart-body"><canvas id="chart-profit"></canvas></div>
+              </div>
+            </div>
+
           </div>
 
         </div>
@@ -389,7 +556,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 
-  <!-- ── Floating AI Assistant ─────────────────────────────────────── -->
   <div id="ai-fab" title="Ask AI Analyst" aria-label="Open AI Assistant">
     <span class="ai-fab-ring"></span>
     <i class="bi bi-stars"></i>
@@ -401,7 +567,7 @@
       <div class="ai-chat-header-left">
         <div class="ai-chat-avatar"><i class="bi bi-stars"></i></div>
         <div>
-          <div class="ai-chat-title">Gemini Strategy Analyst</div>
+          <div class="ai-chat-title">Groq Strategy Analyst</div>
           <div class="ai-chat-subtitle">Bajaj Auto Portfolio · Live Data</div>
         </div>
       </div>
@@ -414,7 +580,7 @@
     <div class="ai-chat-messages" id="ai-chat-messages">
       <div class="ai-msg ai-msg-bot">
         <div class="ai-msg-bubble">
-          👋 Hi! I'm your Gemini-powered BCG strategy analyst.<br><br>
+          👋 Hi! I'm your <strong>Groq-powered</strong> BCG strategy analyst.<br><br>
           Ask me anything about the Bajaj portfolio — investment plans, quadrant moves, revenue breakdowns, or strategic recommendations.
         </div>
       </div>
@@ -434,7 +600,6 @@
       </button>
     </div>
   </div>
-  <!-- ──────────────────────────────────────────────────────────────── -->
 
 </body>
 
